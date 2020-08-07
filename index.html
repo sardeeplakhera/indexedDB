@@ -5,20 +5,33 @@
     <title>Document</title>
 
     <script src="index.js"></script>
+    <!-- <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script> -->
+    <!-- <script src="https://unpkg.com/idb@5.0.4/build/cjs/index.js"></script> -->
+    <!-- <script src="using_dexie.js"></script> -->
+    <!-- <script src="using_idb.js"></script> -->
+    <script type="module">
+        import { openDB, deleteDB, wrap, unwrap } from 'https://unpkg.com/idb?module';
+      
+        // console.log(idb);    
+    </script>
 </head>
 <body>
     <div><button onclick="createDB()">open DB</button></div>
     <div><button onclick="closeDB()">close DB</button></div>
     <div><button onclick="deleteDB()">delete DB</button></div>
     <div><input id="storeDataInput"/> <button onclick="storeData()">check storage limits</button> <span id="totalSize">current size = 0</span> </div>
-    <div><button onclick="storeBlob()">push blob data</button></div>
-    <div><button onclick="storeNumber(10)">push number data</button> <span id="number"></span></div>
-    <div><button onclick="storeString(10)">push string data </button> <span id="string"></span></div>
-    <div><button onclick="storeArrayBuffer(10)">push arrayBuffer data</button><span id="arrayBuffer"></span> </div>
-    <div><input id="readDataInput"/> <button onclick="readData()">read data</button><span id="readDataOutput"></span> </div>
+    <div><button onclick="storeBlob(1)">push blob data</button></div>
+    <div><button onclick="storeNumber(1)">push number data</button> <span id="number"></span></div>
+    <div><button onclick="storeString(1)">push string data </button> <span id="string"></span></div>
+    <div><button onclick="storeArrayBuffer(1)">push arrayBuffer data</button><span id="arrayBuffer"></span> </div>
+    <!-- <div><input id="readDataInput"/> <button onclick="readData()">read data</button><span id="readDataOutput"></span> </div> -->
+    <div><input id="readDataInput"/> <button onclick="search()">search data</button><span id="readDataOutput"></span> </div>
     <div><button onclick="jsDeleteData()">clear all records</button></div>
     <div><button onclick="openDBWithHigherVersion()">upgrade version</button></div>
+    <div><button onclick="dexie_eg()">use dexie</button></div>
     <div><span id="upgradeMsg"></span></div>
+    <div><button onclick="createImageBitmapExample()">createImageBitmap</button></div> 
+    <div><p id="message"></p></div>
     <!-- <div><button></button></div>
     <div><button></button></div> -->
     <!-- <script src="indexedDB.js"></script> -->
