@@ -26,7 +26,7 @@
     <div><button onclick="storeArrayBuffer(1)">push arrayBuffer data</button><span id="arrayBuffer"></span> </div>
     <!-- <div><input id="readDataInput"/> <button onclick="readData()">read data</button><span id="readDataOutput"></span> </div> -->
     <div><input id="readDataInput"/> <button onclick="search()">search data</button><span id="readDataOutput"></span> </div>
-    <div><button onclick="jsDeleteData()">clear all records</button></div>
+    <div><button onclick="clearDB()">clear all records</button></div>
     <div><button onclick="openDBWithHigherVersion()">upgrade version</button></div>
     <div><button onclick="dexie_eg()">use dexie</button></div>
     <div><span id="upgradeMsg"></span></div>
@@ -34,16 +34,25 @@
     <div><p id="message"></p></div>
 
     <div>
-        <input type="text" id="numOfImages"/>
+        <lable>Number of Images:</lable>
+        <input type="number" id="numOfImages"/>
+        <br>
+        <lable>Image Resolution:</lable>
         <select id="imageOptions">
-            <option value="1">Small</option>
-            <option value="2">Medium</option>
-            <option value="3">1k</option>
-            <option value="4">2k</option>
-            <option value="5">4K</option>
-            <option value="6">8K</option>
-        </select>
-        <button onclick="compare()">compare</button>
+            <option value="1">720</option>
+            <option value="2">1080</option>
+            <option value="3">2k</option>
+            <option value="4">4K</option>
+            <option value="5">8K</option>
+        </select> <button onclick="getImage()">Get Images</button><br>
+        <lable>Number of Images in DB:</lable>
+        <input type="number" id="dbSize"/>
+        <br>
+        <button onclick="clearDB()">Delete DB Images</button><br>
+        <button onclick="storeImageWrapper()">Store Images</button><br>
+        <button onclick="getImageBitMapfromDBWrapper()">Get Images from DB</button><br>
+        <button onclick="createImageBitmapInMemoryWrapper()">Create ImageBitMap in memory</button><br>
+        <br>
     </div>
     <!-- <div><button></button></div>
     <div><button></button></div> -->
