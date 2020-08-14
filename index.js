@@ -1,28 +1,35 @@
-if (typeof createImageBitmap === "undefined") {
-    self.createImageBitmap = function (data) {
-        return new Promise((resolve,reject) => {
-            let dataURL;
-            if (data instanceof Blob) {
-                dataURL = URL.createObjectURL(data);
-            } else if (data instanceof ImageData) {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                canvas.width = data.width;
-                canvas.height = data.height;
-                ctx.putImageData(data,0,0);
-                dataURL = canvas.toDataURL();
-            } else {
-                throw new Error("createImageBitmap does not handle the provided image source type");
-            }
-            const img = document.createElement("img");
-            img.addEventListener("load",function () {
-                resolve(this);
-            });
-            img.src = dataURL;
-        });
-    };
-}
+// var myWorker = new Worker('/worker1.js');
+
+// self.createImageBitmap = function (data) {
+//     return new Promise((resolve,reject) => {
+//         let dataURL;
+//         if (data instanceof Blob) {
+//             dataURL = URL.createObjectURL(data);
+//         } else if (data instanceof ImageData) {
+//             const canvas = document.createElement("canvas");
+//             const ctx = canvas.getContext("2d");
+//             canvas.width = data.width;
+//             canvas.height = data.height;
+//             ctx.putImageData(data,0,0);
+//             dataURL = canvas.toDataURL();
+//         } else {
+//             throw new Error("createImageBitmap does not handle the provided image source type");
+//         }
+//         const img = document.createElement("img");
+//         img.addEventListener("load",function () {
+//             resolve(this);
+//         });
+//         img.src = dataURL;
+//     });
+// };
 var _imageBitmap;
+const postToWorker = () => {
+    myWorker.postMessage(_imageBitmap);
+    console.log('Message posted to worker');
+};
+
+
+
 const createImageBitmapExample = () => {
     self.createImageBitmap(blob_)
     .then( imageBitmap => {
@@ -72,6 +79,7 @@ const getImage = () => {
     var imageType = imageOptions.options[imageOptions.selectedIndex].value,
         url = resolution[imageType];
         fetchImage(url);
+        // fetchImage();
 };
 
 const getImageBitMapfromDBWrapper = () => {
@@ -86,11 +94,11 @@ const getImageBitMapfromDBWrapper = () => {
 
 var timeGetImageBitMapfromDB = 0;
 const getImageBitMapfromDB = (numOfImages, queryArray) => {  
-    var transaction = db.transaction("ImageStore");
+    var transaction = db.transaction("DecodedImages");
     transaction.oncomplete = function (event) {
         // console.log("read transaction successful");
     };
-    var objectStore = transaction.objectStore("ImageStore");
+    var objectStore = transaction.objectStore("DecodedImages");
     getValue(numOfImages, queryArray, objectStore);
 };
 
@@ -98,17 +106,62 @@ const getValue = (times, queryArray, objectStore) => {
     times = parseInt(times);
     if (times === 0) {
         var t2 = performance.now();
-        console.log("time taken :", t2 - timeGetImageBitMapfromDB);
+        var t = t2 - timeGetImageBitMapfromDB;
+        console.log("time taken :", t);
+        document.querySelector('#decoded').innerHTML = "time taken :" + t;
         return;
     }
     var req = objectStore.get(queryArray[times-1]);
     req.onsuccess = function (event) {
-        getValue(parseInt(parseInt(times) - 1), queryArray, objectStore);
+        // console.log(event.target);
+        getImageBitMapfromDB(parseInt(parseInt(times) - 1), queryArray);
     };
     req.onerror = function (event) {
         console.log("read failed");
     };
 };
+
+
+const getEncodedImageBitMapfromDBWrapper = () => {
+    var numOfImages = document.querySelector("#numOfImages").value || 1,
+        imageOptions = document.querySelector("#imageOptions"),
+        dbSize = document.querySelector("#dbSize").value || 50;
+
+    var queryArray = getRandomIntArray(numOfImages, 1, dbSize);
+    timeGetImageBitMapfromDB = performance.now();
+    getEncodedImageBitMapfromDB(numOfImages, queryArray);
+};
+
+var timeGetImageBitMapfromDB = 0;
+const getEncodedImageBitMapfromDB = (numOfImages, queryArray) => {  
+    var transaction = db.transaction("EncodedImages");
+    transaction.oncomplete = function (event) {
+        // console.log("EncodedImages: read transaction successful");
+    };
+    var objectStore = transaction.objectStore("EncodedImages");
+    getEncodedValue(numOfImages, queryArray, objectStore);
+};
+
+const getEncodedValue = (times, queryArray, objectStore) => {
+    times = parseInt(times);
+    if (times === 0) {
+        var t2 = performance.now();
+        var t = t2 - timeGetImageBitMapfromDB;
+        console.log("time taken :", t);
+        document.querySelector('#encoded').innerHTML = "time taken :" + t;
+        return;
+    }
+    var req = objectStore.get(queryArray[times-1]);
+    req.onsuccess = function (event) {
+        self.createImageBitmap(event.target.result)
+        .then(imageBitmap => getEncodedImageBitMapfromDB(parseInt(parseInt(times) - 1), queryArray));
+    };
+    req.onerror = function (event) {
+        console.log("read failed");
+    };
+};
+
+
 
 const createImageBitmapInMemoryWrapper = () => {
     var numOfImages = document.querySelector("#numOfImages").value || 1,
@@ -123,7 +176,9 @@ const createImageBitmapInMemory = (numOfImages) => {
     numOfImages = parseInt(numOfImages);
     if (numOfImages === 0) {
         var t2 = performance.now();
-        console.log("time taken :", t2 - timeCreateImageBitmapInMemory);
+        var t = t2 - timeCreateImageBitmapInMemory;
+        console.log("time taken :", t);
+        document.querySelector('#inmemory').innerHTML = "time taken :" + t;
         return;
     }
     self.createImageBitmap(blob_)
@@ -133,31 +188,46 @@ const createImageBitmapInMemory = (numOfImages) => {
 };
 
 const storeImageWrapper = () => {
-    var dbSize = document.querySelector("#dbSize").value || 50;
-    storeImages(_imageBitmap, dbSize);
+    var dbSize = document.querySelector("#dbSize").value || 5;
+    storeImages(_imageBitmap, dbSize, "DecodedImages");
 };
 
-const storeImages = (imageData, numberOfRecords) => {
-    if (numberOfRecords === 0) return; 
+const storeEncodedImageWrapper = () => {
+    var dbSize = document.querySelector("#dbSize").value || 5;
+    
+    console.log("storeEncodedImageWrapper");
+    storeImages(blob_, dbSize, "EncodedImages");
+};
+var A1 = {a: "2"};
+var A2 = Object.assign({}, A1);
+var A3 = {...A1};  // Spread Syntax
+console.log(A1, A2, A3);
+
+
+const storeImages = (imageData, numberOfRecords, storeName) => {
+    if (numberOfRecords === 0) {
+        console.log("storeImages: finished");     
+        return;
+    } 
     numberOfRecords = parseInt(numberOfRecords);
-    var transaction = db.transaction(["ImageStore"], "readwrite");
+    var transaction = db.transaction([storeName], "readwrite");
     transaction.oncomplete = function (event) {
-        storeImages(imageData, parseInt(parseInt(numberOfRecords) - 1));
+        storeImages(imageData, parseInt(parseInt(numberOfRecords) - 1), storeName);
     };
 
     transaction.onerror = function (event) {
         console.log("transaction failed", event.target.error);
     };
 
-    console.log("numOfRecords:", numberOfRecords);
-    var objectStore = transaction.objectStore("ImageStore");
-    var request = objectStore.add(imageData, numberOfRecords);
-    // console.log('%c js: add request for ', 'background: green; color: #bada55', start);
+    // console.log("numOfRecords:", numberOfRecords);
+    var objectStore = transaction.objectStore(storeName);
+    var request = objectStore.put(imageData);
+    
     request.onerror = function (event) {
         console.error("js", event.result, ": entry couldn't be added " + event.target.error);
     };
     request.onsuccess = function (event) {
-        console.log('%c js: entry added successfully! ', 'background: #222; color: #bada55');
+        // console.log('%c js: entry added successfully! ', 'background: #222; color: #bada55');
     };
 };
 
@@ -183,7 +253,7 @@ const deleteDB = () => {
 
         console.log(event.result); // should be undefined
     };
-}
+};
 
 const fetchImage = (url) => {
     url = url || 'https://images.pexels.com/photos/260024/pexels-photo-260024.jpeg';
@@ -191,6 +261,7 @@ const fetchImage = (url) => {
         .then((response) => response.blob())
         .then((blob) => {
             blob_ = blob;
+            console.log("_blob", blob_);
             createImageBitmapExample();
             var fileReader = new FileReader();
             fileReader.onload = function(event) {
@@ -205,10 +276,7 @@ const fetchImage = (url) => {
             fileReaderText.readAsText(blob);
         });
 };
-// fetchImage('./2.jpg');
-// fetchImage();
-// fetchImage('https://images.pexels.com/photos/347139/pexels-photo-347139.jpeg');
-// fetchImage('https://www.hdwallpapers.in/download/skull_10_4k_8k_hd_creative-7680x4320.jpg');
+
 var st = 1;
 var t = document.getElementById('totalSize');
 var num = document.getElementById('number');
@@ -264,7 +332,7 @@ const jsStoreData = (numOfRecords) => {
     
     // for (let i = 1; i <= numOfRecords; i++) {
 
-        var transaction = db.transaction(["ImageStore"], "readwrite");
+        var transaction = db.transaction(["DecodedImages"], "readwrite");
         transaction.oncomplete = function (event) {
             // console.log("transaction successful");
             totalMB_ += parseFloat(textSize_);
@@ -282,7 +350,7 @@ const jsStoreData = (numOfRecords) => {
             console.log("transaction failed", event.target.error);
         };
 
-        var objectStore = transaction.objectStore("ImageStore");
+        var objectStore = transaction.objectStore("DecodedImages");
         var key = "js" + st;
         var request = objectStore.add(record, key);
         // console.log('%c js: add request for ', 'background: green; color: #bada55', start);
@@ -299,11 +367,11 @@ const jsStoreData = (numOfRecords) => {
 };
 
 const clearDB = () => {
-    var transaction = db.transaction("ImageStore", "readwrite");
+    var transaction = db.transaction("DecodedImages", "readwrite");
     transaction.oncomplete = function (event) {
         console.log("delete transaction successful");
     };
-    var objectStore = transaction.objectStore("ImageStore");
+    var objectStore = transaction.objectStore("DecodedImages");
     var req = objectStore.clear();
     req.onsuccess = function (event) {
         console.log("all entries deleted");
@@ -314,11 +382,11 @@ const search = () => {
     var key = document.getElementById('readDataInput').value;
     if (!key) return;
     var t0 = performance.now();
-    var transaction = db.transaction("ImageStore");
+    var transaction = db.transaction("DecodedImages");
     transaction.oncomplete = function (event) {
         console.log("read transaction successful");
     };
-    var objectStore = transaction.objectStore("ImageStore");
+    var objectStore = transaction.objectStore("DecodedImages");
     var req = objectStore.get(key);
     req.onsuccess = function (event) {
         console.log(event);
@@ -342,14 +410,7 @@ onDBError = event => {
     console.error("Database error: " + event.target.errorCode);
 };
 
-var currentVersion = 1;
-// In other tab where you want observation of changes
-// const channel = new BroadcastChannel('myChannel');
-// channel.onmessage = function(event) {
-//   const message = event.data;
-//   console.log('A message occurred', message);
-//   currentVersion = message.dbversion;
-// };
+var currentVersion = 2;
 
 const createDB = () => {
     console.log("createDB1");
@@ -363,7 +424,7 @@ const createDB = () => {
         console.log("createDb: DB open successful with version:", currentVersion);
         // fetchImage();
         db.onversionchange = function (event) {
-            console.log('a database change has occurred');
+            console.log('a database change has occurred', event);
             document.getElementById('upgradeMsg').innerHTML='a database change has occurred';
         };
     };
@@ -371,8 +432,23 @@ const createDB = () => {
         db = event.target.result;
         db.onerror = onDBError;
         console.log("old version =", event.oldVersion, ", new version = ", event.newVersion);
-        // if (event.newVersion == 0)
-        db.createObjectStore("ImageStore");
+        // if (event.newVersion == 2) {
+        //     store.createIndex('height', 'height');
+        // }
+        if (event.oldVersion < 1) {
+            var store = db.createObjectStore("DecodedImages", {autoIncrement: true, keyPath: 'id'});
+            db.createObjectStore("EncodedImages", {autoIncrement: true, keyPath: 'id'});
+        }
+        // if (event.oldVersion < 2) {
+        //     // Version 2 introduces a new index of books by year.
+        //     let store = request.transaction.objectStore("DecodedImages");
+        //     store.deleteIndex('width', 'width');
+        //     store.createIndex('height', 'height');
+        //     db.deleteObjectStore("DecodedImages");
+        //     db.createObjectStore("DecodedImages_2", {autoIncrement: true, keyPath: 'id'});
+        //     console.log("store.createIndex('height', 'height');");
+        // }
+        // store.createIndex('height', 'height');
 
     };
 };

@@ -9,11 +9,11 @@
     <!-- <script src="https://unpkg.com/idb@5.0.4/build/cjs/index.js"></script> -->
     <!-- <script src="using_dexie.js"></script> -->
     <!-- <script src="using_idb.js"></script> -->
-    <script type="module">
+    <!-- <script type="module">
         import { openDB, deleteDB, wrap, unwrap } from 'https://unpkg.com/idb?module';
       
         // console.log(idb);    
-    </script>
+    </script> -->
 </head>
 <body>
     <div><button onclick="createDB()">open DB</button></div>
@@ -32,7 +32,9 @@
     <div><span id="upgradeMsg"></span></div>
     <div><button onclick="createImageBitmapExample()">createImageBitmap</button></div> 
     <div><p id="message"></p></div>
-
+<br><br>
+<hr>
+<br>
     <div>
         <lable>Number of Images:</lable>
         <input type="number" id="numOfImages"/>
@@ -50,10 +52,16 @@
         <br>
         <button onclick="clearDB()">Delete DB Images</button><br>
         <button onclick="storeImageWrapper()">Store Images</button><br>
-        <button onclick="getImageBitMapfromDBWrapper()">Get Images from DB</button><br>
+        <button onclick="storeEncodedImageWrapper()">Store Encoded Images</button><br>
+        <button onclick="getImageBitMapfromDBWrapper('DecodedImages')">Get Decoded Images from DB</button><br>
+        <span id="decoded"></span><br>
+        <button onclick="getEncodedImageBitMapfromDBWrapper()">Get Encoded Images from DB and decode</button><br>
+        <span id="encoded"></span><br>
         <button onclick="createImageBitmapInMemoryWrapper()">Create ImageBitMap in memory</button><br>
+        <span id="inmemory"></span><br>
         <br>
     </div>
+    <!-- <canvas id="canvas" width='1024' height='1024'></canvas> -->
     <!-- <div><button></button></div>
     <div><button></button></div> -->
     <!-- <script src="indexedDB.js"></script> -->
