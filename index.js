@@ -108,7 +108,7 @@ const getValue = (times, queryArray, objectStore) => {
         var t2 = performance.now();
         var t = t2 - timeGetImageBitMapfromDB;
         console.log("time taken :", t);
-        document.querySelector('#decoded').innerHTML = "time taken :" + t;
+        document.querySelector('#decoded').innerHTML = t;
         return;
     }
     var req = objectStore.get(queryArray[times-1]);
@@ -148,7 +148,7 @@ const getEncodedValue = (times, queryArray, objectStore) => {
         var t2 = performance.now();
         var t = t2 - timeGetImageBitMapfromDB;
         console.log("time taken :", t);
-        document.querySelector('#encoded').innerHTML = "time taken :" + t;
+        document.querySelector('#encoded').innerHTML = t;
         return;
     }
     var req = objectStore.get(queryArray[times-1]);
@@ -178,7 +178,7 @@ const createImageBitmapInMemory = (numOfImages) => {
         var t2 = performance.now();
         var t = t2 - timeCreateImageBitmapInMemory;
         console.log("time taken :", t);
-        document.querySelector('#inmemory').innerHTML = "time taken :" + t;
+        document.querySelector('#inmemory').innerHTML = t;
         return;
     }
     self.createImageBitmap(blob_)
@@ -487,3 +487,18 @@ const closeDB = () => {
     console.log("close DB");
     db.close();
 }
+
+
+const calculate = () => {
+    var decodedDB = parseInt(document.querySelector('#decoded').innerText),
+        encodedDB = parseInt(document.querySelector('#encoded').innerText),
+        inMemory = parseInt(document.querySelector('#inmemory').innerText),
+        cal = document.querySelector('#calculate');
+
+    console.log(decodedDB, encodedDB, inMemory);
+    var per1 = parseFloat(((encodedDB - decodedDB)/encodedDB)*100).toFixed(2),
+        per2 = parseFloat(((inMemory - decodedDB)/inMemory)*100).toFixed(2),
+        per3 = parseFloat(((encodedDB - inMemory)/encodedDB)*100).toFixed(2);
+
+    cal.innerHTML = "En:De = " + per1 + "%  ,  InMem:De = " + per2 + "%  ,   En:InMem = " + per3 + "%";
+};
