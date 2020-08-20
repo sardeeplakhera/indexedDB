@@ -34,6 +34,7 @@ const createImageBitmapExample = () => {
     self.createImageBitmap(blob_)
     .then( imageBitmap => {
         _imageBitmap = imageBitmap;
+        console.log("imageBitmap:", imageBitmap);
         // document.getElementById("message").innerHTML = imageBitmap;
     }).catch((e) => {
         console.log("decode error", e);
